@@ -16,7 +16,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "google-auth-library": "^9.0.0",
-    "node-soap": "^0.51.0",
+    "soap": "^1.0.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
