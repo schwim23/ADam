@@ -1,5 +1,5 @@
 import { createAnthropic } from '@ai-sdk/anthropic';
-import { streamText } from 'ai';
+import { streamText, jsonSchema } from 'ai';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
       t.name,
       {
         description: t.description,
-        parameters: t.inputSchema,
+        parameters: jsonSchema(t.inputSchema as Parameters<typeof jsonSchema>[0]),
         execute: async (args: Record<string, unknown>) => {
           const result = await mcpClient.callTool({ name: t.name, arguments: args });
           return result.content;
@@ -74,5 +74,10 @@ export async function POST(req: Request) {
     onFinish: () => mcpClient.close(),
   });
 
-  return result.toDataStreamResponse();
+  return result.toDataStreamResponse({
+    getErrorMessage: (error) => {
+      console.error('[adam] stream error:', error);
+      return error instanceof Error ? error.message : 'Unknown error';
+    },
+  });
 }
