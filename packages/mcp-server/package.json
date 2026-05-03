@@ -1,0 +1,26 @@
+{
+  "name": "@adam/mcp-server",
+  "version": "0.1.0",
+  "description": "ADam MCP server — AdCP tools for AI advertising agents",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "adam-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "google-auth-library": "^9.0.0",
+    "node-soap": "^0.51.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  }
+}
