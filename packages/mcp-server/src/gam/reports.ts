@@ -1,4 +1,5 @@
 import type * as soap from 'soap';
+import { gunzipSync } from 'node:zlib';
 import type { GamAuth } from './soap.js';
 import type { DeliveryRow } from '../adcp/types.js';
 import type { GamDimension } from '../data-client.js';
@@ -116,9 +117,9 @@ export async function runReport(
   const reportQuery: Record<string, unknown> = {
     dimensions: opts.dimensions.map((d) => DIMENSION_MAP[d]),
     columns: [...REPORT_COLUMNS],
-    dateRangeType: 'CUSTOM_DATE',
     startDate: toGamDate(opts.startDate),
     endDate: toGamDate(opts.endDate),
+    dateRangeType: 'CUSTOM_DATE',
   };
 
   if (opts.filter) {
@@ -146,7 +147,9 @@ export async function runReport(
   const res = await fetch(csvUrl, { headers: { Authorization: `Bearer ${token}` } });
   if (!res.ok) throw new Error(`GAM report download failed: ${res.status}`);
 
-  return parseDeliveryCsv(await res.text(), opts.dimensions);
+  const buf = Buffer.from(await res.arrayBuffer());
+  const csv = buf[0] === 0x1f && buf[1] === 0x8b ? gunzipSync(buf).toString('utf8') : buf.toString('utf8');
+  return parseDeliveryCsv(csv, opts.dimensions);
 }
 
 // Legacy helpers kept for getAllDeliveryReports / pacing alerts

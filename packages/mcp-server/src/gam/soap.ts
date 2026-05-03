@@ -1,7 +1,7 @@
 import { GoogleAuth } from 'google-auth-library';
 import * as soap from 'soap';
 
-export const GAM_VERSION = 'v202402';
+export const GAM_VERSION = 'v202511';
 export const GAM_NAMESPACE = `https://www.google.com/apis/ads/publisher/${GAM_VERSION}`;
 const WSDL_BASE = `https://ads.google.com/apis/ads/publisher/${GAM_VERSION}`;
 const GAM_SCOPE = 'https://www.googleapis.com/auth/dfp';
