@@ -1,14 +1,15 @@
 import type * as soap from 'soap';
 import { makeAuth, createSoapClient, soapCall, type GamAuth } from './soap.js';
-import { runDeliveryReport, toDeliveryReports } from './reports.js';
+import { runDeliveryReport, toDeliveryReports, runReport } from './reports.js';
 import { ReportCache, deliveryTTL } from '../cache/index.js';
-import type { DataClient } from '../data-client.js';
+import type { DataClient, DeliveryQuery } from '../data-client.js';
 import type {
   MediaBuy,
   DeliveryReport,
   GovernanceResult,
   InventoryProduct,
   AuditLogEntry,
+  DeliveryRow,
 } from '../adcp/types.js';
 
 export interface GAMConfig {
@@ -173,6 +174,25 @@ export class GAMClient implements DataClient {
     const fresh = await this.fetchAllDeliveryReportsFromGAM({ start, end });
     this.cache.set(key, fresh, deliveryTTL(end));
     return fresh;
+  }
+
+  async getDeliveryReport(query: DeliveryQuery): Promise<DeliveryRow[]> {
+    const cacheKey = `report-${this.config.networkCode}-${query.startDate}-${query.endDate}-${query.dimensions.join('_')}`;
+    const cached = this.cache.get<DeliveryRow[]>(cacheKey);
+    if (cached && !cached.isStale) return cached.data;
+
+    if (cached?.isStale) {
+      setImmediate(() =>
+        runReport(this.config.networkCode, this.auth, this.soapCache, query)
+          .then((data) => this.cache.set(cacheKey, data, deliveryTTL(query.endDate)))
+          .catch((e) => process.stderr.write(`[ADam cache] Background refresh failed: ${e.message}\n`))
+      );
+      return cached.data;
+    }
+
+    const data = await runReport(this.config.networkCode, this.auth, this.soapCache, query);
+    this.cache.set(cacheKey, data, deliveryTTL(query.endDate));
+    return data;
   }
 
   async checkGovernance(mediaBuyId: string): Promise<GovernanceResult> {

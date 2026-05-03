@@ -5,10 +5,10 @@ import { MessageBubble } from './MessageBubble';
 import { useEffect, useRef } from 'react';
 
 const SUGGESTED_PROMPTS = [
-  'Give me this morning\'s briefing',
-  'Any deals that need attention?',
-  'Chart impressions vs spend this week',
-  'Show campaign pacing as a bar chart',
+  "Give me this morning's briefing",
+  'Which ad units dropped eCPM this week?',
+  'Compare revenue WoW by SSP',
+  'Forecast available impressions for homepage',
 ];
 
 export function Chat() {

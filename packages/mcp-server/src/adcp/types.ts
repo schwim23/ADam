@@ -64,3 +64,14 @@ export interface AdCPError {
   code: string;
   message: string;
 }
+
+export interface DeliveryRow {
+  dimensions: Record<string, string>;
+  impressions: number;
+  clicks: number;
+  revenue: number;
+  ecpm: number;
+  ctr: number;
+  totalRequests: number;
+  fillRate: number;
+}

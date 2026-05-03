@@ -72,6 +72,28 @@ export class AdCPClient implements DataClient {
     return this.request<AuditLogEntry[]>(`/v1/audit-logs?${qs}`);
   }
 
+  async getDeliveryReport(query: import('../data-client.js').DeliveryQuery): Promise<import('../adcp/types.js').DeliveryRow[]> {
+    // AdCP mode: get_media_buy_delivery returns line-item data; map to DeliveryRow
+    const mediaBuys = await this.listMediaBuys({ status: 'active' });
+    const results: import('../adcp/types.js').DeliveryRow[] = [];
+    for (const mb of mediaBuys) {
+      const reports = await this.getMediaBuyDelivery(mb.id, { start: query.startDate, end: query.endDate });
+      for (const r of reports) {
+        results.push({
+          dimensions: { date: r.date, line_item: mb.name },
+          impressions: r.impressions,
+          clicks: r.clicks,
+          revenue: r.spend,
+          ecpm: r.impressions > 0 ? (r.spend / r.impressions) * 1000 : 0,
+          ctr: r.impressions > 0 ? (r.clicks / r.impressions) * 100 : 0,
+          totalRequests: r.impressions,
+          fillRate: 1,
+        });
+      }
+    }
+    return results;
+  }
+
   async getAllDeliveryReports(dateRange?: { start: string; end: string }): Promise<{ mediaBuy: MediaBuy; reports: DeliveryReport[] }[]> {
     const mediaBuys = await this.listMediaBuys({ status: 'active' });
     return Promise.all(

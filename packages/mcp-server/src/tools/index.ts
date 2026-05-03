@@ -1,38 +1,38 @@
 import type { DataClient } from '../data-client.js';
-import { campaignMonitorTool, campaignMonitorSchema, handleGetCampaignStatus } from './campaign-monitor.js';
-import { dealAlertsTool, dealAlertsSchema, handleGetDealAlerts } from './deal-alerts.js';
+import { deliverySummaryTool, deliverySummarySchema, handleGetDeliverySummary } from './delivery-summary.js';
+import { pacingAlertsTool, pacingAlertsSchema, handleGetPacingAlerts } from './pacing-alerts.js';
 import { morningBriefingTool, morningBriefingSchema, handleGetMorningBriefing } from './morning-briefing.js';
-import { inventoryTool, inventorySchema, handleDiscoverInventory } from './inventory.js';
-import { performanceTool, performanceSchema, handleGetPerformanceReport } from './performance.js';
+import { yieldAnomaliesTool, yieldAnomaliesSchema, handleGetYieldAnomalies } from './yield-anomalies.js';
+import { inventoryForecastTool, inventoryForecastSchema, handleGetInventoryForecast } from './inventory-forecast.js';
+import { comparePeriodsTool, comparePeriodsSchema, handleComparePeriods } from './compare-periods.js';
 import { auditLogsTool, auditLogsSchema, handleGetPlanAuditLogs } from './audit-logs.js';
 import { visualizationTool, visualizationSchema, handleGenerateVisualization } from './visualization.js';
 
 export const tools = [
-  campaignMonitorTool,
-  dealAlertsTool,
+  deliverySummaryTool,
+  pacingAlertsTool,
   morningBriefingTool,
-  inventoryTool,
-  performanceTool,
+  yieldAnomaliesTool,
+  inventoryForecastTool,
+  comparePeriodsTool,
   auditLogsTool,
   visualizationTool,
 ];
 
-export async function handleToolCall(
-  client: DataClient,
-  name: string,
-  args: Record<string, unknown>
-) {
+export async function handleToolCall(client: DataClient, name: string, args: Record<string, unknown>) {
   switch (name) {
-    case 'get_campaign_status':
-      return handleGetCampaignStatus(client, campaignMonitorSchema.parse(args));
-    case 'get_deal_alerts':
-      return handleGetDealAlerts(client, dealAlertsSchema.parse(args));
+    case 'get_delivery_summary':
+      return handleGetDeliverySummary(client, deliverySummarySchema.parse(args));
+    case 'get_pacing_alerts':
+      return handleGetPacingAlerts(client, pacingAlertsSchema.parse(args));
     case 'get_morning_briefing':
       return handleGetMorningBriefing(client, morningBriefingSchema.parse(args));
-    case 'discover_inventory':
-      return handleDiscoverInventory(client, inventorySchema.parse(args));
-    case 'get_performance_report':
-      return handleGetPerformanceReport(client, performanceSchema.parse(args));
+    case 'get_yield_anomalies':
+      return handleGetYieldAnomalies(client, yieldAnomaliesSchema.parse(args));
+    case 'get_inventory_forecast':
+      return handleGetInventoryForecast(client, inventoryForecastSchema.parse(args));
+    case 'compare_periods':
+      return handleComparePeriods(client, comparePeriodsSchema.parse(args));
     case 'get_plan_audit_logs':
       return handleGetPlanAuditLogs(client, auditLogsSchema.parse(args));
     case 'generate_visualization':
