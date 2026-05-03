@@ -17,6 +17,8 @@ async function getMCPTools() {
     command: process.env.ADAM_MCP_COMMAND ?? 'node',
     args: [process.env.ADAM_MCP_PATH ?? '../mcp-server/dist/index.js'],
     env: {
+      GAM_NETWORK_CODE: process.env.GAM_NETWORK_CODE ?? '',
+      GAM_CREDENTIALS_JSON: process.env.GAM_CREDENTIALS_JSON ?? '',
       ADCP_BASE_URL: process.env.ADCP_BASE_URL ?? '',
       ADCP_API_KEY: process.env.ADCP_API_KEY ?? '',
     },
