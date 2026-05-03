@@ -134,11 +134,36 @@ pnpm start
 
 ## Setting up GAM credentials
 
-1. **Create a service account** in [Google Cloud Console](https://console.cloud.google.com) → IAM & Admin → Service Accounts. Download the JSON key.
-2. **Grant access in GAM**: Admin → Global settings → API access → Service account access. Add the service account email.
-3. Set `GAM_NETWORK_CODE` (found in GAM Admin → Global settings) and paste the JSON key contents into `GAM_CREDENTIALS_JSON`.
+ADam supports two auth methods. **Option A (OAuth2/ADC) is recommended** — no key file or secret management needed.
 
-> **Note:** GAM report jobs take 30 seconds to 2 minutes to run. ADam caches results automatically and refreshes them every 30 minutes in the background. The first request after a cold start will be slow; subsequent requests return instantly from cache.
+### Option A — OAuth2 via Application Default Credentials (recommended)
+
+1. **Enable the Ad Manager API** on your GCP project:
+   ```bash
+   gcloud services enable admanager.googleapis.com
+   ```
+
+2. **Authenticate** (one-time setup):
+   ```bash
+   gcloud auth application-default login \
+     --scopes=https://www.googleapis.com/auth/dfp,https://www.googleapis.com/auth/cloud-platform
+   ```
+   Sign in with the Google account that has access to your GAM network.
+
+3. **Grant GAM access**: In GAM → Admin → Global settings → API access, add the email you authenticated with.
+
+4. Set only `GAM_NETWORK_CODE` in `.env` — no credentials env var needed.
+
+### Option B — Service account JSON key
+
+If you can't use ADC (CI/CD, production deployment without a logged-in user):
+
+1. Create a service account in Google Cloud Console → IAM & Admin → Service Accounts
+2. Download the JSON key
+3. Add the service account email to GAM Admin → Global settings → API access
+4. Set `GAM_CREDENTIALS_JSON` in `.env` with the full JSON key contents (single line)
+
+> **Note on performance:** GAM report jobs take 30 seconds to 2 minutes to run. ADam caches results automatically and refreshes them every 30 minutes in the background. The first request after a cold start will be slow; subsequent requests return instantly from cache.
 
 ---
 

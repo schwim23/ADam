@@ -1,5 +1,5 @@
 import type * as soap from 'soap';
-import type { JWT } from 'google-auth-library';
+import type { GamAuth } from './soap.js';
 import type { DeliveryReport } from '../adcp/types.js';
 import { createSoapClient, soapCall } from './soap.js';
 
@@ -99,7 +99,7 @@ function computePacing(
 
 export async function runDeliveryReport(
   networkCode: string,
-  auth: JWT,
+  auth: GamAuth,
   soapCache: Map<string, soap.Client>,
   opts: {
     startDate: string;
@@ -140,7 +140,7 @@ export async function runDeliveryReport(
   const csvUrl = urlResult?.rval;
   if (!csvUrl) throw new Error('GAM did not return a report download URL');
 
-  const { token } = await auth.getAccessToken();
+  const token = await auth.getAccessToken();
   const res = await fetch(csvUrl, { headers: { Authorization: `Bearer ${token}` } });
   if (!res.ok) throw new Error(`GAM report download failed: ${res.status}`);
   const csv = await res.text();

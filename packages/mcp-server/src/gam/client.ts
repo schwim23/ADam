@@ -1,6 +1,5 @@
 import type * as soap from 'soap';
-import type { JWT } from 'google-auth-library';
-import { makeAuth, createSoapClient, soapCall } from './soap.js';
+import { makeAuth, createSoapClient, soapCall, type GamAuth } from './soap.js';
 import { runDeliveryReport, toDeliveryReports } from './reports.js';
 import { ReportCache, deliveryTTL } from '../cache/index.js';
 import type { DataClient } from '../data-client.js';
@@ -14,8 +13,8 @@ import type {
 
 export interface GAMConfig {
   networkCode: string;
-  clientEmail: string;
-  privateKey: string;
+  // Optional — if omitted, Application Default Credentials are used
+  credentials?: { client_email: string; private_key: string };
 }
 
 function gamStatusToAdamStatus(s: string): MediaBuy['status'] {
@@ -52,13 +51,13 @@ function mapLineItem(item: any): MediaBuy & { unitsBought: number } {
 
 export class GAMClient implements DataClient {
   private config: GAMConfig;
-  private auth: JWT;
+  private auth: GamAuth;
   private soapCache = new Map<string, soap.Client>();
   readonly cache: ReportCache;
 
   constructor(config: GAMConfig) {
     this.config = config;
-    this.auth = makeAuth(config.clientEmail, config.privateKey);
+    this.auth = makeAuth(config.credentials);
     this.cache = new ReportCache();
   }
 
@@ -240,22 +239,18 @@ export class GAMClient implements DataClient {
 
 export function createGAMClient(): GAMClient {
   const networkCode = process.env.GAM_NETWORK_CODE;
-  const credentialsJson = process.env.GAM_CREDENTIALS_JSON;
+  if (!networkCode) throw new Error('GAM_NETWORK_CODE is required');
 
-  if (!networkCode || !credentialsJson) {
-    throw new Error('GAM_NETWORK_CODE and GAM_CREDENTIALS_JSON are required for GAM mode');
+  // Explicit service account JSON takes priority; otherwise fall back to ADC
+  // (set up via: gcloud auth application-default login --scopes=https://www.googleapis.com/auth/dfp)
+  let credentials: { client_email: string; private_key: string } | undefined;
+  if (process.env.GAM_CREDENTIALS_JSON) {
+    try {
+      credentials = JSON.parse(process.env.GAM_CREDENTIALS_JSON);
+    } catch {
+      throw new Error('GAM_CREDENTIALS_JSON must be valid JSON');
+    }
   }
 
-  let creds: { client_email: string; private_key: string };
-  try {
-    creds = JSON.parse(credentialsJson);
-  } catch {
-    throw new Error('GAM_CREDENTIALS_JSON must be valid JSON (paste your service account key file contents)');
-  }
-
-  return new GAMClient({
-    networkCode,
-    clientEmail: creds.client_email,
-    privateKey: creds.private_key,
-  });
+  return new GAMClient({ networkCode, credentials });
 }
