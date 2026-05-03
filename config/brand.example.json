@@ -1,0 +1,10 @@
+{
+  "schema": "https://adcontextprotocol.org/schemas/brand.json",
+  "name": "Your Publisher Name",
+  "domain": "publisher.example.com",
+  "analytics_agent": {
+    "uri": "https://adam.example.com/mcp/",
+    "protocol": "mcp",
+    "description": "GAM-backed publisher yield, pacing, and inventory analytics"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "https://adcontextprotocol.org/schemas/adagents.json",
+  "agents": [
+    {
+      "name": "ADam",
+      "uri": "https://adam.example.com/mcp/",
+      "protocol": "mcp",
+      "capabilities": ["x-publisher-analytics"]
+    }
+  ]
+}

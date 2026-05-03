@@ -14,10 +14,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
+    "publisher-analytics-agent": "github:schwim23/publisher-analytics-agent",
     "google-auth-library": "^9.0.0",
-    "soap": "^1.0.0",
-    "zod": "^3.23.0"
+    "soap": "^1.0.0"
   },
   "devDependencies": {
     "typescript": "^5.4.0",

@@ -1,16 +1,18 @@
 import type * as soap from 'soap';
 import { makeAuth, createSoapClient, soapCall, type GamAuth } from './soap.js';
 import { runDeliveryReport, toDeliveryReports, runReport } from './reports.js';
-import { ReportCache, deliveryTTL } from '../cache/index.js';
-import type { DataClient, DeliveryQuery } from '../data-client.js';
-import type {
-  MediaBuy,
-  DeliveryReport,
-  GovernanceResult,
-  InventoryProduct,
-  AuditLogEntry,
-  DeliveryRow,
-} from '../adcp/types.js';
+import {
+  ReportCache,
+  deliveryTTL,
+  type DataClient,
+  type DeliveryQuery,
+  type MediaBuy,
+  type DeliveryReport,
+  type GovernanceResult,
+  type InventoryProduct,
+  type AuditLogEntry,
+  type DeliveryRow,
+} from 'publisher-analytics-agent';
 
 export interface GAMConfig {
   networkCode: string;

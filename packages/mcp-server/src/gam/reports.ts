@@ -1,10 +1,8 @@
 import type * as soap from 'soap';
 import { gunzipSync } from 'node:zlib';
 import type { GamAuth } from './soap.js';
-import type { DeliveryRow } from '../adcp/types.js';
-import type { GamDimension } from '../data-client.js';
+import type { DeliveryRow, DeliveryDimension as GamDimension, DeliveryReport } from 'publisher-analytics-agent';
 import { createSoapClient, soapCall } from './soap.js';
-import type { DeliveryReport } from '../adcp/types.js';
 
 interface GamDate { year: number; month: number; day: number; }
 
