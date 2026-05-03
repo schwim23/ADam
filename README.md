@@ -1,8 +1,8 @@
 # ADam
 
-**Agentic advertising operations — open source, built on [AdCP](https://adcontextprotocol.org).**
+**Agentic publisher analytics — open source, built on [AdCP](https://adcontextprotocol.org).**
 
-ADam is a reporting and analytics agent that connects to your ad server and lets you ask natural-language questions about campaign performance, pacing, deal alerts, and inventory. It is architected as an **MCP server** — the core intelligence layer — with a Next.js web UI and a CLI shipped as reference client implementations.
+ADam is a yield analytics agent that connects to your ad server and lets you ask natural-language questions about network performance, eCPM trends, pacing, SSP mix, and inventory. It is architected as an **MCP server** — the core intelligence layer — with a Next.js web UI and a CLI shipped as reference client implementations.
 
 > Inspired by closed-source tools like [Geoff](https://www.linkedin.com/posts/jeremyvarner_excited-to-introduce-our-newest-team-member-share-7455978439947354112-31rW). Built to be open.
 
@@ -12,12 +12,12 @@ ADam is a reporting and analytics agent that connects to your ad server and lets
 
 | Ask ADam | What happens |
 |---|---|
-| "Give me this morning's briefing" | Aggregates delivery, spend, CTR, and pacing for all active campaigns |
-| "Any deals that need attention?" | Surfaces underdelivering, overspending, and governance-violating line items |
-| "Chart impressions vs spend this week" | Fetches live data and renders an inline chart |
-| "Show me campaign pacing as a bar chart" | Same — ADam picks the right chart type |
-| "What's the delivery on line item 12345?" | Pulls daily breakdown with pacing calculation |
-| "Show available 300x250 inventory" | Queries your ad server's inventory |
+| "Give me this morning's briefing" | Network totals: impressions, revenue, eCPM, fill rate + SSP breakdown |
+| "Which ad units dropped eCPM this week?" | Detects yield anomalies by ad unit with inferred causes |
+| "Compare revenue WoW by SSP" | Side-by-side comparison across any two date ranges |
+| "Forecast available impressions for homepage" | Projects inventory from 30-day delivery history |
+| "Show pacing alerts" | Surfaces line items that are under- or over-pacing against their goals |
+| "Chart impressions vs eCPM this week" | Fetches live data and renders an inline chart |
 
 ---
 
@@ -33,15 +33,16 @@ ADam is a reporting and analytics agent that connects to your ad server and lets
         │       ADam MCP Server         │
         │                               │
         │  Tools:                       │
-        │  • get_campaign_status        │
-        │  • get_deal_alerts            │
+        │  • get_delivery_summary       │
+        │  • get_pacing_alerts          │
         │  • get_morning_briefing       │
-        │  • get_performance_report     │
-        │  • discover_inventory         │
+        │  • get_yield_anomalies        │
+        │  • get_inventory_forecast     │
+        │  • compare_periods            │
         │  • get_plan_audit_logs        │
         │  • generate_visualization     │
         │                               │
-        │  Cache: ~/.adam/cache/        │
+        │  Cache: stale-while-revalidate│
         │  (30-min background refresh)  │
         └───────────┬───────────────────┘
                     │
@@ -61,7 +62,7 @@ The MCP server is the only thing that knows your ad server credentials. The web 
 
 | Package | Description |
 |---|---|
-| `packages/mcp-server` | Core — AdCP tools over MCP (stdio transport) |
+| `packages/mcp-server` | Core — publisher analytics tools over MCP (stdio transport) |
 | `packages/web` | Next.js chat UI (reference implementation) |
 | `packages/cli` | Terminal REPL (reference implementation) |
 
@@ -96,9 +97,9 @@ Edit `.env`:
 **GAM mode** (connect to Google Ad Manager directly):
 ```env
 GAM_NETWORK_CODE=123456789
-GAM_CREDENTIALS_JSON={"type":"service_account","client_email":"...","private_key":"..."}
 ANTHROPIC_API_KEY=sk-ant-...
 ```
+See [Setting up GAM credentials](#setting-up-gam-credentials) — OAuth2/ADC is recommended and requires no key file.
 
 **AdCP mode** (connect to any AdCP-compliant server):
 ```env
@@ -138,21 +139,16 @@ ADam supports two auth methods. **Option A (OAuth2/ADC) is recommended** — no 
 
 ### Option A — OAuth2 via Application Default Credentials (recommended)
 
-1. **Enable the Ad Manager API** on your GCP project:
-   ```bash
-   gcloud services enable admanager.googleapis.com
-   ```
-
-2. **Authenticate** (one-time setup):
+1. **Authenticate** (one-time setup):
    ```bash
    gcloud auth application-default login \
      --scopes=https://www.googleapis.com/auth/dfp,https://www.googleapis.com/auth/cloud-platform
    ```
    Sign in with the Google account that has access to your GAM network.
 
-3. **Grant GAM access**: In GAM → Admin → Global settings → API access, add the email you authenticated with.
+2. **Grant GAM access**: In GAM → Admin → Global settings → API access, add the email you authenticated with.
 
-4. Set only `GAM_NETWORK_CODE` in `.env` — no credentials env var needed.
+3. Set only `GAM_NETWORK_CODE` in `.env` — no credentials env var needed.
 
 ### Option B — Service account JSON key
 
@@ -178,15 +174,16 @@ Add to your `claude_desktop_config.json`:
       "command": "node",
       "args": ["/path/to/ADam/packages/mcp-server/dist/index.js"],
       "env": {
-        "GAM_NETWORK_CODE": "123456789",
-        "GAM_CREDENTIALS_JSON": "{...}"
+        "GAM_NETWORK_CODE": "123456789"
       }
     }
   }
 }
 ```
 
-Once added, all 7 ADam tools are available directly in Claude Desktop.
+If using a service account key instead of ADC, add `"GAM_CREDENTIALS_JSON": "{...}"` to the `env` block.
+
+Once added, all 8 ADam tools are available directly in Claude Desktop.
 
 ---
 
@@ -194,11 +191,12 @@ Once added, all 7 ADam tools are available directly in Claude Desktop.
 
 | Tool | Description |
 |---|---|
-| `get_campaign_status` | List campaigns with delivery status and 7-day pacing |
-| `get_deal_alerts` | Surface underdelivery, overspend, and governance issues |
-| `get_morning_briefing` | Daily digest: impressions, CTR, spend, pacing summary |
-| `get_performance_report` | Daily breakdown for a specific campaign over a date range |
-| `discover_inventory` | Query available ad units / inventory products |
+| `get_delivery_summary` | Flexible delivery report: impressions, clicks, revenue, eCPM, fill rate across any dimensions (date, ad unit, SSP, device, country, etc.) |
+| `get_pacing_alerts` | Surface line items that are under- or over-pacing against their delivery goals |
+| `get_morning_briefing` | Daily digest: network totals, top ad units by revenue, SSP breakdown |
+| `get_yield_anomalies` | Detect eCPM or fill rate drops vs. the prior period, with inferred causes |
+| `get_inventory_forecast` | Project available impressions for an ad unit over a future date range |
+| `compare_periods` | Side-by-side metric comparison across any two date ranges (WoW, MoM, YoY, custom) |
 | `get_plan_audit_logs` | Retrieve the decision audit trail (AdCP mode only) |
 | `generate_visualization` | Turn any data result into an inline chart (web UI only) |
 
@@ -208,10 +206,10 @@ Once added, all 7 ADam tools are available directly in Claude Desktop.
 
 The web UI renders charts inline when you ask for them. ADam automatically chooses the right chart type, or you can specify:
 
-- **Line** — trends over time (impressions, spend, CTR)
+- **Line** — trends over time (impressions, eCPM, CTR)
 - **Area** — cumulative delivery
-- **Bar** — campaign comparisons
-- **Pie** — budget or format mix
+- **Bar** — ad unit or SSP comparisons
+- **Pie** — revenue mix by SSP or format
 
 Charts are generated by calling `generate_visualization` after a data tool, using [Recharts](https://recharts.org) for rendering.
 
@@ -223,13 +221,13 @@ ADam uses a `DataClient` interface. Both backends implement the same interface, 
 
 | | GAM mode | AdCP mode |
 |---|---|---|
+| Delivery reporting | `ReportService` (SOAP) with flexible dimensions | `/v1/media-buys/{id}/delivery` |
 | Line items | `LineItemService` (SOAP) | `/v1/media-buys` |
-| Delivery | `ReportService` (SOAP) | `/v1/media-buys/{id}/delivery` |
 | Inventory | `InventoryService` (SOAP) | `/v1/products` |
 | Governance | Creative approval status | `/v1/governance/check` |
 | Audit logs | Not available (GAM limitation) | `/v1/audit-logs` |
 
-To add a new backend (DV360, TTD, Xandr, etc.), implement the `DataClient` interface in `packages/mcp-server/src/` and add it to the factory in `index.ts`.
+To add a new backend (DV360, Xandr, etc.), implement the `DataClient` interface in `packages/mcp-server/src/` and add it to the factory in `index.ts`.
 
 ---
 
@@ -248,9 +246,9 @@ The project is a [pnpm workspace](https://pnpm.io/workspaces) monorepo with Type
 
 ## Relationship to AdCP
 
-ADam is a **buyer-side reporting agent** built on the [Ad Context Protocol](https://github.com/adcontextprotocol/adcp). It consumes AdCP endpoints for read-only analytics — no spend-committing operations, no request signing required.
+ADam is a **publisher-side analytics agent** built on the [Ad Context Protocol](https://github.com/adcontextprotocol/adcp). It connects to your ad server to surface yield analytics — eCPM trends, fill rates, pacing, SSP mix — using natural language.
 
-AdCP is open source (Apache 2.0) and governed by [AgenticAdvertising.Org](https://adcontextprotocol.org). ADam aims to be a community reference implementation for buyer-side analytics on AdCP.
+AdCP is open source (Apache 2.0) and governed by [AgenticAdvertising.Org](https://adcontextprotocol.org). ADam aims to be a community reference implementation for publisher-side analytics on AdCP.
 
 ---
 
