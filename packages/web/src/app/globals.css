@@ -1,12 +1,200 @@
 @import "tailwindcss";
+@source "../../src/**/*.{ts,tsx}";
 
 :root {
-  --background: #0f0f0f;
-  --foreground: #ededed;
+  /* Surface */
+  --background: #FAFAF7;
+  --surface: #FFFFFF;
+  --surface-2: #F4F3EE;
+  --surface-3: #ECEAE2;
+  --border: #E7E5DE;
+  --border-strong: #D4D2C9;
+
+  /* Ink */
+  --foreground: #0E0E0C;
+  --foreground-muted: #4F4D47;
+  --foreground-soft: #76746C;
+
+  /* Accent — black-ink, with a soft tonal pair for chips/hovers */
+  --accent: #0E0E0C;
+  --accent-fg: #FAFAF7;
+  --accent-soft: #ECEAE2;
+  --accent-hover: #1F1E1B;
+
+  /* Data semantics — reserved for deltas, never brand */
+  --positive: #15803D;
+  --warning: #B45309;
+  --danger: #B91C1C;
+
+  /* Type */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
-body {
+* { box-sizing: border-box; }
+
+html, body {
   background: var(--background);
   color: var(--foreground);
-  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
+  font-family: var(--font-sans);
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
 }
+
+/* Subtle paper grain on the base background — keeps the cream surface from
+   feeling flat without being noisy. */
+body {
+  background-image:
+    radial-gradient(circle at 25% 20%, rgba(20, 18, 12, 0.02), transparent 50%),
+    radial-gradient(circle at 80% 0%, rgba(20, 18, 12, 0.018), transparent 45%);
+  background-attachment: fixed;
+}
+
+/* Remove tabular-nums for body copy in prose; restore for tables / data
+   chips so columns align without making body text feel mechanical. */
+.prose-adam { font-variant-numeric: normal; }
+.prose-adam table,
+.prose-adam .num,
+[data-numeric] { font-variant-numeric: tabular-nums; }
+
+/* ───────────────  Markdown rendering — .prose-adam  ─────────────── */
+.prose-adam {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--foreground);
+  letter-spacing: -0.005em;
+}
+.prose-adam > * + * { margin-top: 0.85rem; }
+.prose-adam h1,
+.prose-adam h2,
+.prose-adam h3 {
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  color: var(--foreground);
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.25;
+}
+.prose-adam h1 { font-size: 1.4rem; }
+.prose-adam h2 { font-size: 1.15rem; }
+.prose-adam h3 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.075em;
+  color: var(--foreground-muted);
+  font-weight: 600;
+}
+.prose-adam p { margin: 0; }
+.prose-adam strong { color: var(--foreground); font-weight: 600; }
+.prose-adam em { font-style: italic; color: var(--foreground-muted); }
+.prose-adam a {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--border-strong);
+  transition: text-decoration-color 0.15s ease;
+}
+.prose-adam a:hover { text-decoration-color: var(--foreground); }
+.prose-adam ul,
+.prose-adam ol {
+  padding-left: 1.25rem;
+  margin: 0;
+}
+.prose-adam ul { list-style: disc; }
+.prose-adam ol { list-style: decimal; }
+.prose-adam li { margin: 0.18rem 0; padding-left: 0.25rem; }
+.prose-adam li::marker { color: var(--foreground-soft); }
+.prose-adam blockquote {
+  border-left: 2px solid var(--accent);
+  padding: 0.1rem 0 0.1rem 0.875rem;
+  color: var(--foreground-muted);
+  font-style: normal;
+  margin: 0.5rem 0;
+}
+.prose-adam code {
+  font-family: var(--font-mono);
+  font-size: 0.84em;
+  background: var(--surface-2);
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--foreground);
+}
+.prose-adam pre {
+  background: var(--foreground);
+  color: var(--background);
+  border-radius: 10px;
+  padding: 0.95rem 1.1rem;
+  overflow-x: auto;
+  font-size: 0.84em;
+  line-height: 1.55;
+}
+.prose-adam pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+.prose-adam hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.25rem 0;
+}
+
+/* Tables — the workhorse of analytics output */
+.prose-adam table {
+  width: 100%;
+  font-size: 0.875rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0.6rem 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+.prose-adam th,
+.prose-adam td {
+  text-align: left;
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.prose-adam th {
+  background: var(--surface-2);
+  font-weight: 600;
+  color: var(--foreground-muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border-strong);
+  white-space: nowrap;
+}
+.prose-adam tbody tr:last-child td { border-bottom: none; }
+.prose-adam tbody tr:hover { background: color-mix(in srgb, var(--surface-2) 60%, transparent); }
+.prose-adam td:not(:first-child) { text-align: right; }
+.prose-adam th:not(:first-child) { text-align: right; }
+
+/* Scrollbar refinement */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; border: 2px solid var(--background); }
+*::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+/* Stagger entrance for the empty-state hero */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-rise { animation: rise 0.45s cubic-bezier(0.2, 0.6, 0.2, 1) both; }
+
+/* Ascending-bar pulse for the connected indicator */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.animate-pulse-soft { animation: pulse-soft 2.4s ease-in-out infinite; }
