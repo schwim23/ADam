@@ -5,7 +5,9 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 
 const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const SYSTEM_PROMPT = `You are ADam, an open-source publisher analytics agent built on Google Ad Manager and the Ad Context Protocol (AdCP).
+const AGENT_NAME = process.env.NEXT_PUBLIC_AGENT_NAME?.trim() || process.env.AGENT_NAME?.trim() || 'Publisher Analytics';
+
+const SYSTEM_PROMPT = `You are ${AGENT_NAME}, an open-source publisher analytics agent built on the Ad Context Protocol (AdCP).
 You help publishers and their ops teams understand network performance, diagnose yield issues, track pacing, and forecast inventory.
 You work across all campaigns regardless of how they were booked — direct, programmatic, or via AdCP.
 When answering questions, always use your tools to fetch live data. Never make up numbers.

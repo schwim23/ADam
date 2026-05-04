@@ -1,7 +1,10 @@
 'use client';
 
 import type { Message, ToolInvocation } from 'ai';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { ChartRenderer, parseChartSpec } from './ChartRenderer';
+import { Logo } from './Logo';
 
 interface Props {
   message: Message;
@@ -26,28 +29,31 @@ export function MessageBubble({ message }: Props) {
     .map(extractChartFromInvocation)
     .filter(Boolean);
 
-  return (
-    <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
-      {message.content && (
-        <div
-          className={`max-w-[85%] rounded-xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
-            isUser ? 'bg-white/10 text-white/90' : 'text-white/80'
-          }`}
-        >
-          {!isUser && (
-            <span className="text-xs text-white/30 uppercase tracking-widest block mb-2">ADam</span>
-          )}
+  if (isUser) {
+    return (
+      <div className="flex justify-end">
+        <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-[var(--surface-2)] border border-[var(--border)] text-[var(--foreground)] px-4 py-2.5 text-[15px] leading-relaxed whitespace-pre-wrap">
           {message.content}
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {charts.map((spec, i) =>
-        spec ? (
-          <div key={i} className="w-full max-w-[95%]">
-            <ChartRenderer spec={spec} />
+  return (
+    <div className="flex gap-4 items-start">
+      <div className="flex-shrink-0 mt-1 text-[var(--foreground)]">
+        <Logo size={22} />
+      </div>
+      <div className="flex-1 min-w-0 space-y-3">
+        {message.content && (
+          <div className="prose-adam">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
           </div>
-        ) : null
-      )}
+        )}
+        {charts.map((spec, i) =>
+          spec ? <ChartRenderer key={i} spec={spec} /> : null,
+        )}
+      </div>
     </div>
   );
 }
