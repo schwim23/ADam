@@ -131,7 +131,7 @@ Then in **GAM → Admin → Global settings → API access**, add the email you 
 
 ## Backend 3: AdCP-conformant server
 
-If your ad server already speaks the AdCP HTTP/JSON spec (`/v1/media-buys`, `/v1/products`, `/v1/audit-logs`, etc.), the upstream package ships an `AdCPBuyerClient` that implements `DataClient` against it. You'd write a small shim that swaps `createGAMClient()` for `new AdCPBuyerClient({...})` in `packages/mcp-server/src/index.ts` (or fork that file into your own package).
+If your ad server already speaks AdCP 3.0 — MCP/JSON-RPC over HTTP at `/mcp/` — the upstream package ships an `AdCPBuyerClient` that calls the spec's tools (`get_media_buys`, `get_products`, `get_media_buy_delivery`, `get_media_buy_artifacts`, `check_governance`) and implements `DataClient`. You'd write a small shim that swaps `createGAMClient()` for `new AdCPBuyerClient({...})` in `packages/mcp-server/src/index.ts` (or fork that file into your own package).
 
 ```ts
 import { createPublisherAnalyticsServer, AdCPBuyerClient } from 'publisher-analytics-agent';
@@ -280,7 +280,7 @@ This serves:
 
 | Endpoint | What it does |
 |---|---|
-| `POST /mcp/` | MCP-over-HTTP. Bearer token required in `x-adcp-auth` header. |
+| `POST /mcp/` | MCP-over-HTTP. Bearer token required in `Authorization` header. |
 | `GET /.well-known/adagents.json` | Your publisher's authorized-agents manifest. |
 | `GET /.well-known/brand.json` | Your brand's named agents (incl. the `analytics_agent` field). |
 | `GET /healthz` | Health check, no auth. |
